@@ -1,0 +1,13 @@
+#MIN TEMP TRENDS
+
+##WW44SS
+## Summary
+This repository contains R-code which analyzes temperature data downloaded from the [National Climate Data Center](http://www.ncdc.noaa.gov/cdo-web/).  
+  
+The hypothesis this is intended to test is that the effects of climate change are most visible in the changes in __minimum__ temepratures, since the greenhouse traps heat and thus slows nightime cooling. 
+
+Data downloads are not automated. The website serves data asynchonously and so the program assumes the .csv file is stored locally. Typically files can be quite large, but an example file is stored in the repository.  
+
+The data files contain columns with the names TMAX and TMIN which are in tenths of a degree Celcius.
+Data is stored as YYYYMMDD
+NA Values in the data are -9,999
