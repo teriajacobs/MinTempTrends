@@ -41,7 +41,8 @@ TempData <- read.csv("403792.csv", header=TRUE, na.strings="-9999")
         ##create Date Factor Columns for later analysis
         MON<-format(TempData$DATE, "%b")
         YEAR <-format(TempData$DATE, "%Y")
-        MON<-factor(MON)
+        #MON<-factor(MON)
+        MON<-factor(MON, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
         YEAR<-factor(YEAR)
         TempData<-cbind(TempData, MON, YEAR)
 
@@ -83,10 +84,37 @@ library(ggplot2)
 print(P1)
 ```
 
+##Winter Months
+
+
+
 ```{r "plot_min_year", echo=TRUE, fig.align='center', fig.width=8}
+
+TempDataWinter<-TempData[TempData$MON == "Jan"|TempData$MON == "Feb"|TempData$MON == "Mar",]
+
+
 library(ggplot2)
-        P1 <- ggplot(TempData, aes(x=YEAR, y=TMIN))+geom_boxplot()
-        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
+        P1 <- ggplot(TempDataWinter, aes(x=1930+as.numeric(TempDataWinter$YEAR), y=TMIN))+geom_point(size=2, alpha=.06, colour="red")
+        P1<-P1+stat_smooth()
+        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))+ coord_cartesian(ylim = c(-10, 10)) 
+        
 
 print(P1)
 ```
+
+
+
+```{r "plot_zero", echo=TRUE, fig.align='center', fig.width=8}
+
+library(plyr)
+
+    
+ineqtest<-function(x) x<0
+
+zerotest <- apply(TempData$MIN, ineqtest)
+
+table(zerotest)
+
+
+```
+
