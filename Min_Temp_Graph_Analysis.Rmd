@@ -1,0 +1,92 @@
+---
+title: "Graphical Analysis of Trends in Minimum Temperature"
+author: "ww44ss"
+date: "September 30, 2014"
+output: 
+html_document:
+    keep_md: true
+---
+
+##Synopsis
+
+Trends in minimum temperature are thought to be among the most telling signatures of climate change. This analysis tests that hypotesis by looking for this signature in climate data stored by NOAA's [National CLimate Data Center](http://www.ncdc.noaa.gov/cdo-web/).
+
+The analysis looks at a number of statistics, including the trend of daily minimum temperatures over the length of the record and a trend of the number of days each year with temperatures below the median low temperature for the entire sample.
+
+```{r "read_data", echo=TRUE}
+
+TempData <- read.csv("403792.csv", header=TRUE, na.strings="-9999")
+
+
+```
+
+##Data Input and Cleaning
+
+```{r "clean_data", echo=TRUE}
+
+##DATA CLEANING
+
+        ## Preserve only columns of interest
+
+        TempData<-TempData[,c("STATION", "STATION_NAME", "DATE", "TMIN", "TMAX", "TOBS")]
+
+        ## keep complete cases
+        
+        TempData<-TempData[complete.cases(TempData),]
+
+        ## convert dates
+        
+        TempData$DATE<-as.Date(as.character(TempData$DATE), format="%Y%m%d")
+
+        ##create Date Factor Columns for later analysis
+        MON<-format(TempData$DATE, "%b")
+        YEAR <-format(TempData$DATE, "%Y")
+        MON<-factor(MON)
+        YEAR<-factor(YEAR)
+        TempData<-cbind(TempData, MON, YEAR)
+
+        ## convert temperatures 
+        ## note the data as input are in tenths of a degree C
+
+        TempData$TMIN <- TempData$TMIN/10.
+        TempData$TMAX <- TempData$TMAX/10.
+        TempData$TOBS <- TempData$TOBS/10.
+
+str(TempData)
+
+datadim<-dim(TempData)
+
+
+```
+
+The cleaned data contain `r datadim[1]` observations from `r TempData$DATE[1]` to `r TempData$DATE[datadim[1]]`.  
+The maximum high temperature during this period was `r max(TempData$TMAX)` degrees Celcius.  
+
+The maximum low temperature during this period was `r max(TempData$TMIN)` degrees Celcius.  
+The minimum low temperature during this period was `r min(TempData$TMIN)` degrees Celcius.    
+
+##Trend of Low Temperatures
+
+```{r "plot_mins", echo=TRUE, fig.align='center', fig.width=8}
+library(ggplot2)
+        P1 <- ggplot(TempData, aes(x=DATE, y=TMIN))+geom_line(colour="blue")
+        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
+
+print(P1)
+```
+
+```{r "plot_min_month", echo=TRUE, fig.align='center', fig.width=8}
+library(ggplot2)
+        P1 <- ggplot(TempData, aes(x=MON, y=TMIN))+geom_boxplot()
+        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
+
+print(P1)
+```
+
+```{r "plot_min_year", echo=TRUE, fig.align='center', fig.width=8}
+library(ggplot2)
+        P1 <- ggplot(TempData, aes(x=YEAR, y=TMIN))+geom_boxplot()
+        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
+
+print(P1)
+```
