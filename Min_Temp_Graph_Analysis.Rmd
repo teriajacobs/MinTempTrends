@@ -104,16 +104,40 @@ print(P1)
 
 
 
-```{r "plot_zero", echo=TRUE, fig.align='center', fig.width=8}
+```{r "plot_zero_Winter", echo=TRUE, fig.align='center', fig.width=8}
 
 library(plyr)
 
-    
-ineqtest<-function(x) x<0
+##Get data for select months 
+TempDataWinter<-TempData[TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb",]
+##Get the median of the tire endata sets
+TMINWintermedian<-median(TempDataWinter$TMIN)
+##Selet the data records below the Median
+LowData<-TempData[TempDataWinter$TMIN<TMINWintermedian,]
 
-zerotest <- apply(TempData$MIN, ineqtest)
+##count the total records
+TMINtotal<-count(TempDataWinter$TMIN, "YEAR")
+##count the selected records
+TMINsubcount<-count(LowData, "YEAR")
 
-table(zerotest)
+##normalize measurement to number of measurements per year
+TMINsubcount$freq<-365.*TMINsubcount$freq/TMINtotal$freq
+
+##store the selected records in a holding variable.
+TMINcountLOW<-TMINsubcount
+
+TMINdata<-merge(TMINtotal, TMINsubcount)
+
+str(TMINdata)
+head(TMINcountLOW)
+head(TMINtotal)
+
+       P1 <- ggplot(TMINsubcount, aes(x=1930+as.numeric(TMINsubcount$YEAR), y=freq))+geom_point(colour="red")
+       P1<-P1+stat_smooth()
+       P1<-P1+xlab("YEAR")+ylab("Number of Days")+ggtitle("Days Below Median vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#+ coord_cartesian(ylim = c(0, 200)) 
+
+print(P1)
 
 
 ```
