@@ -1,5 +1,5 @@
 ---
-title: "Graphical Analysis of Trends in Minimum Temperature"
+title: "Looking for Evidence of Climate Change in Minimum Temperature Trends"
 author: "ww44ss"
 date: "September 30, 2014"
 output: 
@@ -9,20 +9,38 @@ html_document:
 
 ##Synopsis
 
-Trends in minimum temperature are thought to be among the most telling signatures of climate change. This analysis tests that hypotesis by looking for this signature in climate data stored by NOAA's [National CLimate Data Center](http://www.ncdc.noaa.gov/cdo-web/).
+Trends in minimum temperature are thought to be among the most telling signatures of climate change. This analysis tests that hypotesis by looking for this signature in climate data stored by NOAA's [National Climate Data Center](http://www.ncdc.noaa.gov/cdo-web/).
 
-The analysis looks at a number of statistics, including the trend of daily minimum temperatures over the length of the record and a trend of the number of days each year with temperatures below the median low temperature for the entire sample.
+The analysis looks at a couple of statistics, including the trend of daily minimum temperatures over the length of the record and a trend of the number of days each year with temperatures above the median low temperature and above 0oC for the entire sample.
 
 ```{r "read_data", echo=TRUE}
 
-TempData <- read.csv("403792.csv", header=TRUE, na.strings="-9999")
+TempData <- read.csv("407175.csv", header=TRUE, na.strings="-9999")
 
 
 ```
 
 ##Data Input and Cleaning
 
-```{r "clean_data", echo=TRUE}
+Input and data cleaning are pretty straight forward. Data are downloaded from the [National Climate Database](http://www.ncdc.noaa.gov/cdo-web/) by selecting  
+- Browse Data Sets  
+- Daily Summaries  
+- Mapping Tool
+- Selecting a station with an appropriately long record (preferably 1930's to present)  
+- Select Custom GHCN-Daily CSV 
+- Select Date Range  
+- On next screen select Station Name and Air Temperature (contains fields TMIN, TMAX, and TOBS)  
+- Enter email address  
+- Submit  
+
+A link to the data will arrive in your email in a few minutes to a few hours.
+
+One the file is dowloaded it can be stored in the local directory. The program needs to be edited to read it.  
+
+The main data cleaning are eliminating NA's and creating Date factor columns for later analysis.  
+
+
+```{r "clean_data", echo=FALSE}
 
 ##DATA CLEANING
 
@@ -64,11 +82,16 @@ The cleaned data contain `r datadim[1]` observations from `r TempData$DATE[1]` t
 The maximum high temperature during this period was `r max(TempData$TMAX)` degrees Celcius.  
 
 The maximum low temperature during this period was `r max(TempData$TMIN)` degrees Celcius.  
-The minimum low temperature during this period was `r min(TempData$TMIN)` degrees Celcius.    
+The minimum low temperature during this period was `r min(TempData$TMIN)` degrees Celcius.  
 
-##Trend of Low Temperatures
 
-```{r "plot_mins", echo=TRUE, fig.align='center', fig.width=8}
+##Trend of Low Temperatures for `r TempData$STATION_NAME[1]`  
+
+The Temperature trends for a specific location show expected seasonal variation and seems to follow a regular pattern with little apparent long term change. 
+
+The plot below is the TMIN data for the period mentioned above. In most cases a few data points which appear to be outliers are present. These points are not eliminated from the analysis since there is no documented reason to do so.  
+
+```{r "plot_mins", echo=FALSE, fig.align='center', fig.width=8}
 library(ggplot2)
         P1 <- ggplot(TempData, aes(x=DATE, y=TMIN))+geom_line(colour="blue")
         P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
@@ -76,7 +99,10 @@ library(ggplot2)
 print(P1)
 ```
 
-```{r "plot_min_month", echo=TRUE, fig.align='center', fig.width=8}
+We can disect the seasonal trend from the data as in the plot below. Ranges vary but for most coastal data sets the variation in low temperatures is on the order of 10oC. This variation will swamp any expected changes (more on the order of 1oC) from climate change.
+
+
+```{r "plot_min_month", echo=FALSE, fig.align='center', fig.width=8}
 library(ggplot2)
         P1 <- ggplot(TempData, aes(x=MON, y=TMIN))+geom_boxplot()
         P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
@@ -84,11 +110,16 @@ library(ggplot2)
 print(P1)
 ```
 
-##Winter Months
+##Looking at Trend in the Winter Months
+
+One place to start is looking at the trend of Min temps in the Winter months. From the graph above, the TMIN for the Months December to March are fairly stable. So let's start there.  
+
+###Density Trends  
+
+The first thing to look at is the density of temperature data points for each year of the record. In the Figure below each TMIN is plotted with an alpha = 0.06, meaning that about 15 overlaying data points can be resolved. Here, , though the trend line shows little to no variation, we can possibly see a hint of an upward trend in the data suggested by a lower density of points at the low end in later years. 
 
 
-
-```{r "plot_min_year", echo=TRUE, fig.align='center', fig.width=8}
+```{r "plot_min_year", echo=FALSE, fig.align='center', fig.width=8}
 
 TempDataWinter<-TempData[TempData$MON == "Jan"|TempData$MON == "Feb"|TempData$MON == "Mar",]
 
@@ -96,24 +127,24 @@ TempDataWinter<-TempData[TempData$MON == "Jan"|TempData$MON == "Feb"|TempData$MO
 library(ggplot2)
         P1 <- ggplot(TempDataWinter, aes(x=1930+as.numeric(TempDataWinter$YEAR), y=TMIN))+geom_point(size=2, alpha=.06, colour="red")
         P1<-P1+stat_smooth()
-        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))+ coord_cartesian(ylim = c(-10, 10)) 
+        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))+ coord_cartesian(ylim = c(-10, 20)) 
         
 
 print(P1)
 ```
 
-
+###Min Temp Trends
 
 ```{r "plot_zero_Winter", echo=TRUE, fig.align='center', fig.width=8}
 
 library(plyr)
 
 ##Get data for select months 
-TempDataWinter<-TempData[TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb",]
+TempDataWinter<-TempData[TempData$MON== "Mar"|TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb",]
 ##Get the median of the tire endata sets
 TMINWintermedian<-median(TempDataWinter$TMIN)
 ##Selet the data records below the Median
-LowData<-TempData[TempDataWinter$TMIN<TMINWintermedian,]
+LowData<-TempData[TempDataWinter$TMIN>TMINWintermedian,]
 
 ##count the total records
 TMINtotal<-count(TempDataWinter$TMIN, "YEAR")
@@ -126,19 +157,48 @@ TMINsubcount$freq<-365.*TMINsubcount$freq/TMINtotal$freq
 ##store the selected records in a holding variable.
 TMINcountLOW<-TMINsubcount
 
-TMINdata<-merge(TMINtotal, TMINsubcount)
-
-str(TMINdata)
-head(TMINcountLOW)
-head(TMINtotal)
 
        P1 <- ggplot(TMINsubcount, aes(x=1930+as.numeric(TMINsubcount$YEAR), y=freq))+geom_point(colour="red")
-       P1<-P1+stat_smooth()
-       P1<-P1+xlab("YEAR")+ylab("Number of Days")+ggtitle("Days Below Median vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+       P1<-P1+stat_smooth(method="loess")
+       P1<-P1+xlab("YEAR")+ylab("Number of Days")+ggtitle("Winter TMIN > Median vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 #+ coord_cartesian(ylim = c(0, 200)) 
 
 print(P1)
 
 
 ```
+
+```{r "plot_zero_Winter_Plus", echo=TRUE, fig.align='center', fig.width=8}
+
+library(plyr)
+
+##Get data for select months 
+TempDataWinter<-TempData[TempData$MON== "Mar"|TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb",]
+##Get the median of the tire endata sets
+TMINWintermedian<-0.
+##Selet the data records below the Median
+LowData<-TempData[TempDataWinter$TMIN>TMINWintermedian,]
+
+##count the total records
+TMINtotal<-count(TempDataWinter$TMIN, "YEAR")
+##count the selected records
+TMINsubcount<-count(LowData, "YEAR")
+
+##normalize measurement to number of measurements per year
+TMINsubcount$freq<-365.*TMINsubcount$freq/TMINtotal$freq
+
+##store the selected records in a holding variable.
+TMINcountLOW<-TMINsubcount
+
+
+       P1 <- ggplot(TMINsubcount, aes(x=1930+as.numeric(TMINsubcount$YEAR), y=freq))+geom_point(colour="red")
+       P1<-P1+stat_smooth(method="loess")
+       P1<-P1+xlab("YEAR")+ylab("Number of Days")+ggtitle("Winter TMIN > 0 vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#+ coord_cartesian(ylim = c(0, 200)) 
+
+print(P1)
+
+
+```
+
 
