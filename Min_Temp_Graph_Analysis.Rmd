@@ -11,7 +11,9 @@ html_document:
 
 Trends in minimum temperature are thought to be among the most telling signatures of climate change. This analysis tests that hypotesis by looking for this signature in climate data stored by NOAA's [National Climate Data Center](http://www.ncdc.noaa.gov/cdo-web/).
 
-The analysis looks at a couple of statistics, including the trend of daily minimum temperatures over the length of the record and a trend of the number of days each year with temperatures above the median low temperature and above 0oC for the entire sample.
+The analysis looks the trend in TMIN (the minimum daily temperature) in for Winter and Summer months. While changes are not visible in the overall trend, using a threshold level detection scheme, we can clearly see an upturn in TMIN during Winter months. The trend is not apparent dueing summer months. This suggests the effects of climate change are more subtle than one might expect, affecting minimum temperatures during colder months rather than maximum temperatures during hotter months. 
+
+Full code is available on my [Github](http://github.com/ww44ss/MinTempTrends)
 
 ```{r "read_data", echo=TRUE}
 
@@ -37,7 +39,7 @@ A link to the data will arrive in your email in a few minutes to a few hours.
 
 One the file is dowloaded it can be stored in the local directory. The program needs to be edited to read it.  
 
-The main data cleaning are eliminating NA's and creating Date factor columns for later analysis.  
+The main data cleaning are eliminating NA's and creating Date factor columns for later analysis. Here is a look at the structure of the cleaned data. 
 
 
 ```{r "clean_data", echo=FALSE}
@@ -79,8 +81,8 @@ datadim<-dim(TempData)
 ```
 
 The cleaned data contain `r datadim[1]` observations from `r TempData$DATE[1]` to `r TempData$DATE[datadim[1]]`.  
-The maximum high temperature during this period was `r max(TempData$TMAX)` degrees Celcius.  
 
+The maximum high temperature during this period was `r max(TempData$TMAX)` degrees Celcius.  
 The maximum low temperature during this period was `r max(TempData$TMIN)` degrees Celcius.  
 The minimum low temperature during this period was `r min(TempData$TMIN)` degrees Celcius.  
 
@@ -110,22 +112,25 @@ library(ggplot2)
 print(P1)
 ```
 
-##Looking at Trend in the Winter Months
+##Trend in Winter Months
 
-One place to start is looking at the trend of Min temps in the Winter months. From the graph above, the TMIN for the Months December to March are fairly stable. So let's start there.  
+One place to start is looking at the trend of Min temps in the Winter months. 
+This can be interesting from the standpoint that solar heating during the day is shorter and nightimes are longer, allowing for more time for a change in the greenhouse effect to manifest itself.
+
+From the graph above, the TMIN for the Months December to March are fairly stable. So let's start there.  
 
 ###Density Trends  
 
-The first thing to look at is the density of temperature data points for each year of the record. In the Figure below each TMIN is plotted with an alpha = 0.06, meaning that about 15 overlaying data points can be resolved. Here, , though the trend line shows little to no variation, we can possibly see a hint of an upward trend in the data suggested by a lower density of points at the low end in later years. 
+The first thing to look at is the density of temperature data points for each year of the record. In the Figure below each TMIN is plotted with an alpha = 0.06, meaning that about 15 overlaying data points can be resolved. While the trend line shows little to no variation, but that is not necessarily the whole story. 
 
 
 ```{r "plot_min_year", echo=FALSE, fig.align='center', fig.width=8}
 
-TempDataWinter<-TempData[TempData$MON == "Jan"|TempData$MON == "Feb"|TempData$MON == "Mar",]
+TempDataWinter<-TempData[TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb"|TempData$MON == "Mar",]
 
 
 library(ggplot2)
-        P1 <- ggplot(TempDataWinter, aes(x=1930+as.numeric(TempDataWinter$YEAR), y=TMIN))+geom_point(size=2, alpha=.06, colour="red")
+        P1 <- ggplot(TempDataWinter, aes(x=1930+as.numeric(TempDataWinter$YEAR), y=TMIN))+geom_point(size=2.2, alpha=.06, colour="blue")
         P1<-P1+stat_smooth()
         P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))+ coord_cartesian(ylim = c(-10, 20)) 
         
@@ -135,7 +140,13 @@ print(P1)
 
 ###Min Temp Trends
 
-```{r "plot_zero_Winter", echo=TRUE, fig.align='center', fig.width=8}
+If there is a trend in minimum temperatures we obviously need to look at the data differently to see it. One way to do that is to set a threshold discriminator. In other words, how many days in the year have minimums above or below a given value. If the threshold is set near a the peak of the distribution, we should be able to see subtle changes.    
+
+
+Below is a plot of the number of days with TMIN above the median TMIN for the entire population. You can see clearly there is a uptick the number of days
+
+
+```{r "plot_zero_Winter", echo=FALSE, fig.align='center', fig.width=8}
 
 library(plyr)
 
@@ -168,7 +179,9 @@ print(P1)
 
 ```
 
-```{r "plot_zero_Winter_Plus", echo=TRUE, fig.align='center', fig.width=8}
+This plot looks at the number of days above 0C, the freezing point. This is significant biologically since many plants adn animals suffer more severe damage below freezing, so changes on flora andfauna might be expected for days with fewer days with zero degree days. 
+
+```{r "plot_zero_Winter_Plus", echo=FALSE, fig.align='center', fig.width=8}
 
 library(plyr)
 
@@ -201,4 +214,116 @@ print(P1)
 
 ```
 
+The number of days with TMIN above zero appears to be increasing in the last few years. This is consistent with other pbservations that the effects of Climate Change are most prevalent after about 1980. 
 
+###TMAX Trends
+
+
+
+```{r "plot_Max_Winter", echo=FALSE, fig.align='center', fig.width=8}
+
+
+
+##Get data for select months 
+TempDataWinter<-TempData[TempData$MON== "Mar"|TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb",]
+##Get the median of the tire endata sets
+TMINWintermedian<-median(TempDataWinter$TMAX)
+##Selet the data records above the Median
+LowData<-TempData[TempDataWinter$TMAX>TMINWintermedian,]
+
+##count the total records
+TMINtotal<-count(TempDataWinter$TMIN, "YEAR")
+##count the selected records
+TMINsubcount<-count(LowData, "YEAR")
+
+##normalize measurement to number of measurements per year
+TMINsubcount$freq<-365.*TMINsubcount$freq/TMINtotal$freq
+
+##store the selected records in a holding variable.
+TMINcountLOW<-TMINsubcount
+
+
+       P1 <- ggplot(TMINsubcount, aes(x=1930+as.numeric(TMINsubcount$YEAR), y=freq))+geom_point(colour="red")
+       P1<-P1+stat_smooth(method="loess")
+       P1<-P1+xlab("YEAR")+ylab("Number of Days")+ggtitle("Winter TMAX > Median vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#+ coord_cartesian(ylim = c(0, 200)) 
+
+print(P1)
+
+
+```
+
+
+  
+##Trend in Summer Months
+
+Another place to look is at the trend of Min temps in the Summer months. 
+
+From the graph above, the TMIN for the Months July and Augist are fairly stable. 
+
+###Density Trends  
+
+The first thing to look at is the density of temperature data points for each year of the record. In the Figure below each TMIN is plotted with an alpha = 0.06, meaning that about 15 overlaying data points can be resolved. While the trend line shows little to no variation, but that is not necessarily the whole story. 
+
+
+```{r "plot_min_year summer", echo=FALSE, fig.align='center', fig.width=8}
+
+TempDataWinter<-TempData[TempData$MON == "Jul"|TempData$MON == "Aug",]
+
+
+library(ggplot2)
+        P1 <- ggplot(TempDataWinter, aes(x=1930+as.numeric(TempDataWinter$YEAR), y=TMIN))+geom_point(size=2.2, alpha=.06, colour="blue")
+        P1<-P1+stat_smooth()
+        P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Summer Min Temperatures vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))+ coord_cartesian(ylim = c(0, 20)) 
+        
+
+print(P1)
+```
+
+###Min Temp Trends
+
+If there is a trend in minimum temperatures we obviously need to look at the data differently to see it. One way to do that is to set a threshold discriminator. In other words, how many days in the year have minimums above or below a given value. If the threshold is set near a the peak of the distribution, we should be able to see subtle changes.    
+
+
+Below is a plot of the number of days with TMIN above the median TMIN for the population. In this case there is no change. 
+
+
+```{r "plot_zero_Summer", echo=FALSE, fig.align='center', fig.width=8}
+
+##Get the median of the tire endata sets
+TMINWintermedian<-median(TempDataWinter$TMIN)
+##Selet the data records below the Median
+LowData<-TempData[TempDataWinter$TMIN>TMINWintermedian,]
+
+##count the total records
+TMINtotal<-count(TempDataWinter$TMIN, "YEAR")
+##count the selected records
+TMINsubcount<-count(LowData, "YEAR")
+
+##normalize measurement to number of measurements per year
+TMINsubcount$freq<-365.*TMINsubcount$freq/TMINtotal$freq
+
+##store the selected records in a holding variable.
+TMINcountLOW<-TMINsubcount
+
+
+       P1 <- ggplot(TMINsubcount, aes(x=1930+as.numeric(TMINsubcount$YEAR), y=freq))+geom_point(colour="red")
+       P1<-P1+stat_smooth(method="loess")
+       P1<-P1+xlab("YEAR")+ylab("Number of Days")+ggtitle("Summer TMIN > Median vs. Date") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#+ coord_cartesian(ylim = c(0, 200)) 
+
+print(P1)
+
+
+```
+
+
+   
+##Some Conclusions
+
+The temperature data from this station don't on the surface appear to show signficant change. However, by looking at a thresold level, we can see clearly the behavior of TMIN has changed for Winter months.  
+
+The Summer months do not show a similar trend. 
+
+It should be possible, but looking at a histogram, to estimate the change in temperature that would cause the observed shift in the Winter months, but that will be for later.
+   
