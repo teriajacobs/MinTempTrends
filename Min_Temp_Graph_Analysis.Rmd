@@ -17,7 +17,7 @@ Full code is available on [Github](http://github.com/ww44ss/MinTempTrends)
 
 ```{r "read_data", echo=TRUE}
 
-TempData <- read.csv("407964_A.csv", header=TRUE, na.strings="-9999")
+TempData <- read.csv("407175.csv", header=TRUE, na.strings="-9999")
 
 
 ```
@@ -51,11 +51,15 @@ The main data cleaning are eliminating NA's and creating Date factor columns for
 
         ## Preserve only columns of interest
 
-        TempData<-TempData[,c("STATION", "STATION_NAME", "DATE", "TMIN", "TMAX", "TOBS")]
+        TempData<-TempData[,c("STATION", "STATION_NAME", "DATE", "TMIN", "TMAX")]
 
         ## keep complete cases
         
         TempData<-TempData[complete.cases(TempData),]
+
+        ##Make sure Temps are numerical
+        TempData$TMIN = as.numeric(TempData$TMIN)
+        TempData$TMAX = as.numeric(TempData$TMAX)
 
         ## convert dates
         
@@ -74,7 +78,6 @@ The main data cleaning are eliminating NA's and creating Date factor columns for
 
         TempData$TMIN <- TempData$TMIN/10.
         TempData$TMAX <- TempData$TMAX/10.
-        TempData$TOBS <- TempData$TOBS/10.
 
 str(TempData)
 
@@ -97,11 +100,14 @@ The Temperature trends for a specific location show expected seasonal variation 
 The plot below is the TMIN data for the period mentioned above. In most cases a few data points which appear to be outliers are present. These points are not eliminated from the analysis since there is no documented reason to do so.  
 
 ```{r "plot_mins", echo=FALSE, fig.align='center', fig.width=8}
+
 library(ggplot2)
+
         P1 <- ggplot(TempData, aes(x=DATE, y=TMIN))+geom_line(colour="blue")
         P1<-P1+xlab("Date")+ylab("Temperature (C)")+ggtitle("Min Temperatures vs. Date")
 
 print(P1)
+
 ```
 
 We can disect the seasonal trend from the data as in the plot below. Ranges vary but for most coastal data sets the variation in low temperatures is on the order of 10oC. This variation will swamp any expected changes (more on the order of 1oC) from climate change.
