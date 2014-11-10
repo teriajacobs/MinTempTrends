@@ -198,7 +198,7 @@ library(plyr)
 ##Get data for select months 
 TempDataWinter<-TempData[TempData$MON== "Mar"|TempData$MON == "Dec"|TempData$MON == "Jan"|TempData$MON == "Feb",]
 ##Get the median of the tire endata sets
-TMINWintermedian<--5.
+TMINWintermedian<-0.
 ##Selet the data records below the Median
 LowData<-TempData[TempDataWinter$TMIN>TMINWintermedian,]
 
